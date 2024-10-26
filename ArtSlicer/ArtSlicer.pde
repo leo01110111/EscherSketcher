@@ -30,11 +30,10 @@ void keyPressed(){
  if(key == 'p'){
    float[] lengths = coordsToLengths(points); 
    println("Lengths of Cables: " + Arrays.toString(lengths));
-   print("Coords: ");
-   for(int[] coords : points) 
-     print(Arrays.toString(coords) + " ");
-   println();
-   //to do: send to serial
+   //print("Coords: ");
+   //for(int[] coords : points) 
+   //  print(Arrays.toString(coords) + " ");
+   //println();
  }
 }
 
@@ -44,9 +43,10 @@ float[] coordsToLengths(ArrayList<int[]> points){
   for(int[] coords : points){
     int x = coords[0];
     int y = coords[1];
-    //to do: calculate lengths 
-    lengths[i] = x;
-    lengths[i + 1] = y;
+    float leftLength = sqrt(pow(x,2)+pow(y,2)); //from an observer looking at the machine
+    float rightLength = sqrt(pow(width-x,2)+pow(y,2));
+    lengths[i] = leftLength;
+    lengths[i + 1] = rightLength;
     i += 2;
   }
   return lengths;
