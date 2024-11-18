@@ -2,19 +2,9 @@
 #include <Adafruit_MotorShield.h>
 #include <MultiStepper.h>
 #include <Servo.h>
-//for the left stepper, a positive position means moving counter clockwise
-//for the right stepper, a positive position menas moving clockwise
-//Drawing information 
-
-float homeLengths[] = {1819, 1857}; //home 181.9cm left stepper length, 185.7cm right stepper length
-float lengths[] = {1819,1857};
 
 //Hardware settings
-const float speed = 100; // in step per second
-const int dotDelay = 2000;
-const float pulleyRadius = 6.5;//in mm. 40/pi/2
-const float stepDeg = 0.031;//in rad
-const float mmPerStep = pulleyRadius*stepDeg; //in mm
+const float speed = 1; // in step per second
 const int servoPin = 10;
 const int servoUp = 90; //deg for pen to be up
 const int servoDown = 180; // deg for pen to be down
@@ -49,8 +39,30 @@ AccelStepper stepperRight(forwardstep2, backwardstep2);
 void setup()
 {
   initialize();
-  //running the drawing
-  run(lengths);
+  Serial.begin(9600);
+}
+
+void loop(){
+  if (Serial.available() > 0){
+    String receivedString = Serial.readString();
+    Serial.println(receivedString);
+    if (commaIndex != -1) { // Ensure a comma was found
+      // Extract the first and second parts of the string
+      String firstPart = receivedString.substring(0, commaIndex);
+      String secondPart = receivedString.substring(commaIndex + 1);
+      // Convert the parts to integers
+      int xDisplacement = firstPart.toInt();
+      int yDisplacement = secondPart.toInt();
+    }
+  }
+  long positions[2]; // Array of desired stepper positions
+  stepper()
+    positions[0] = leftLength/mmPerStep; // position of the left belt in steps
+    positions[1] = rightLength/mmPerStep; // position of the right belt in steps
+    Serial.println(positions[0]);
+    steppers.moveTo(positions); //position is in steps and moves to the position not by a distance
+    steppers.runSpeedToPosition(); // Blocks until all are in position
+
 }
 
 void initialize(){
@@ -66,11 +78,11 @@ void initialize(){
   // Then give them to MultiStepper to manage
   steppers.addStepper(stepperLeft);
   steppers.addStepper(stepperRight);
-  stepperLeft.setCurrentPosition(homeLengths[0]);
-  stepperRight.setCurrentPosition(homeLengths[1]);
+  stepperLeft.setCurrentPosition(0);
+  stepperRight.setCurrentPosition(0);
 
 }
-
+/*
 void run(float lengths[]){
   Serial.println("Sketch Drawing in Progress...");
   for (int i = 0; i < sizeof(lengths); i+=2){
@@ -86,13 +98,13 @@ void run(float lengths[]){
     steppers.runSpeedToPosition(); // Blocks until all are in position
 
     penDown(true);
-    delay(dotDelay);
+    delay(1000);
     penDown(false);
 
     Serial.println("Point " + String(i/2 + 1) + "/" + String(sizeof(lengths)/2) + " Completed");
 
   }
-}
+}*/
 
 void penDown(bool isDown){
   if(isDown){  
@@ -102,5 +114,3 @@ void penDown(bool isDown){
     penServo.write(servoUp);
   }
 }
-
-void loop(){}
