@@ -9,14 +9,14 @@ int drawingSurfaceHeight = 1270; // Height of the drawing surface
 float offsetX = 1333; // X offset to position the image's top-left corner
 float offsetY = 645; // Y offset to position the image's top-left corner
 float scaleFactor = 1;  // Scale factor to match image size to machine size
-int resolution = 40; //res = 2 uses every other point 1 is normal
+int resolution = 1; //res = 2 uses every other point 1 is normal
 
 void setup() {
   // Set an initial size (fallback value) first
   size(2667, 1270);
 
   // Load your image after the size is set
-  img = loadImage("example.png"); // Load your image file
+  img = loadImage("circle.png"); // Load your image file
   println("Original Image Width: " + img.width);
   println("Original Image Height: " + img.height);
   
