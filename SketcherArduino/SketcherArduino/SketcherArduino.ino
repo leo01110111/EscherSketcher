@@ -6,9 +6,6 @@
 //for the right stepper, a positive position menas moving clockwise from the user's perspective
 
 float homeLengths[] = {1819, 1857}; //home 1819mm left stepper length, 1857mm right stepper length
-float lengths[] = {};
-
-int n = (int)sizeof(lengths)/sizeof(lengths[0]);
 
 //Hardware settings
 const float speed = 100; //max speed in step per second
@@ -68,27 +65,51 @@ void setup()
   stepperRight.setCurrentPosition(round(homeLengths[1]/mmPerStep));
 }
 
-//DEBUG: Check if this allows me to automatically start repeating the sequence on the next line.
 void loop(){
-  while (Serial.available() > 0) {
-    float lengthLeft = Serial.parseFloat();
-    float lengthRight = Serial.parseFloat();
-    if (Serial.read() == '\n') {
-      run(lengthLeft, lengthRight);
+  if (Serial.available() > 0) {
+    String msg = Serial.readString();
+    
+    if (msg[0] == 'M') {
+      int lengths[2];
+      parseLengths(msg, lengths, 2);
+      run(lengths[0], lengths[1]);
       Serial.println("Point Complete");
     }
   }
 }
 
+void parseLengths(String input, int* outputArray, int arraySize) {
+  int currentIndex = 0;  // Index for the output array
+
+  // Start parsing from the second character to skip the initial letter
+  int startIdx = 1;  // Skip the first character (the letter)
+
+  // Use a while loop to extract integers
+  while (currentIndex < arraySize) {
+    // Find the next comma
+    int endIdx = input.indexOf(',', startIdx);
+
+    // If no more commas, extract the last number
+    if (endIdx == -1) {
+      endIdx = input.length();
+    }
+
+    // Extract the substring, convert to int, and store in the array
+    String numberStr = input.substring(startIdx, endIdx);
+    outputArray[currentIndex] = numberStr.toInt();
+
+    // Move to the next segment
+    startIdx = endIdx + 1;
+    currentIndex++;
+  }
+}
+
 void run(float leftLength, float rightLength){    
-  float leftLength = lengths[i];
-  float rightLength = lengths[i+1];
 
   long positions[2]; // Array of desired stepper positions
   
   positions[0] = round(leftLength/mmPerStep); // position of the left belt in steps
   positions[1] = round(rightLength/mmPerStep); // position of the right belt in steps
-  Serial.println("Left Side: " + String(lengths[i]) + " Right Side: " + String(lengths[i+1]));
   steppers.moveTo(positions); //position is in steps and moves to the position not by a distance
   steppers.runSpeedToPosition(); // Blocks until all are in position
 
@@ -104,30 +125,4 @@ void penDown(bool isDown){
   else{  
     penServo.write(servoUp);
   }
-}
-
-void checkSerial(){
-  if (Serial.available() > 0) {
-    // read the incoming byte:
-    inputString = Serial.readString();
-
-    // say what you got:
-    Serial.print("I received: ");
-    Serial.println(inputString);
-  }
-}
-
-void loop(){
-  checkSerial();
-
-  if (inputString.equals("begin")){
-    isStarted = true;
-  }
-
-  if (isStarted == true){
-    isStarted = false;
-    inputString = "";
-    run(lengths);
-  }
-
 }

@@ -1,5 +1,6 @@
 // Processing code to convert a digital image into a 1D float array for motor commands
 import java.util.Arrays;
+import processing.serial.*;
 
 PImage img;
 float[] motorCommands;
@@ -11,21 +12,44 @@ float offsetY = 645; // Y offset to position the image's top-left corner
 float scaleFactor = 1;  // Scale factor to match image size to machine size
 int resolution = 1; //res = 2 uses every other point 1 is normal
 
+Serial robotPort;
+
 void setup() {
-  // Set an initial size (fallback value) first
   size(2667, 1270);
 
   // Load your image after the size is set
   img = loadImage("circle.png"); // Load your image file
-  println("Original Image Width: " + img.width);
-  println("Original Image Height: " + img.height);
   
   // Position the image at the specified offsets
   image(img, offsetX, offsetY, img.width, img.height);
-
   
   motorCommands = generateMotorCommands(img);
-  println("Motor commands:", Arrays.toString(motorCommands));
+  
+  robotPort = new Serial(this, Serial.list()[1], 9600); // Opens the 1 port at 9600 baud
+  
+  String initalCommand = "M, " + nf(motorCommands[0], 0, 2) + ", " + nf(motorCommands[1], 0, 2) + "\n";
+  
+  robotPort.write(initalCommand);
+  println(initalCommand);
+  //print(initalCommand);
+  //print first set of commands "x,y" form
+  
+  /*
+  for (int i = 2; i < motorCommands.length; i ++){
+    boolean msgReceived = false;
+    while (!msgReceived){
+      if (robotPort.available() > 0) { // Check if data is available
+        String data = robotPort.readStringUntil('\n'); // Read until newline
+        println(data);
+        if (data.charAt(0) == 'P') {
+          println("received message");
+          msgReceived = true;
+        }
+      }
+    }
+    robotPort.write("M, " + motorCommands[i] + ", " + motorCommands[i+1]);
+    println("Sent: motor commands");
+  }*/
 }
 
 float[] generateMotorCommands(PImage img) {
@@ -75,4 +99,10 @@ float[] calculateBeltLengths(float x, float y) {
 
 void draw() {
   // Optionally visualize the path here
+  while (robotPort.available() > 0) {
+    String response = robotPort.readStringUntil('\n'); // Read until newline
+    if (response != null) {
+      println("Received: " + response.trim()); // Trim removes extra spaces or newlines
+    }
+  }
 }
